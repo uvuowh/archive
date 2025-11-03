@@ -1,235 +1,202 @@
-# ---------------------------------------------------------------
-# Smart Clash Config Template
-#
-# Created based on user-provided node list and best practices.
-# Suitable for subscription conversion tools.
-# ---------------------------------------------------------------
+# ===================================================================================
+# Mihomo (Clash.Meta) Smart 智能分流模板
+# ===================================================================================
 
-# (General) General settings
+# 机场订阅
+proxy-providers:
+  订阅:
+    url: "你的订阅链接" # <--- !! 修改这里 !!
+    type: http
+    interval: 86400
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 300
+    # 排除掉明显不是节点的信息，以防万一
+    filter: "^((?!(过期|到期|流量|官网|客服)).)*$"
+
+# 节点信息
+proxies:
+  - {name: 🎯 全球直连, type: direct}
+  - {name: 🚫 拒绝, type: reject}
+
+# 全局配置
 port: 7890
 socks-port: 7891
-mixed-port: 7893
+mixed-port: 7892
 allow-lan: true
 mode: rule
-log-level: info
-external-controller: '127.0.0.1:9090'
-secret: ''
+log-level: warning
+external-controller: 0.0.0.0:9090
+secret: ""
 
-# (DNS) DNS settings
+# DNS 模块
 dns:
   enable: true
-  listen: '0.0.0.0:53'
+  listen: 0.0.0.0:1053
   ipv6: false
-  enhanced-mode: redir-host
+  enhanced-mode: fake-ip
+  fake-ip-range: 28.0.0.1/8
   nameserver:
-    - https://dns.google/dns-query
-    - https://doh.pub/dns-query
-    - 114.114.114.114
+    - 223.5.5.5
+    - 119.29.29.29
   fallback:
+    - https://dns.google/dns-query
     - https://1.1.1.1/dns-query
-    - https://dns.quad9.net/dns-query
-    - 8.8.8.8
-  fallback-filter:
-    geoip: true
-    geoip-code: CN
-    ipcidr:
-      - 240.0.0.0/4
 
-# (TUN) TUN device settings for system-wide proxy
+# TUN 模块
 tun:
   enable: true
-  stack: system
+  stack: mixed
   dns-hijack:
     - any:53
   auto-route: true
   auto-detect-interface: true
 
-# (Proxy Provider) Proxy node subscription
-# !!! Replace with your subscription link !!!
-proxy-providers:
-  main-subscription:
-    type: http
-    url: "YOUR_SUBSCRIPTION_LINK_HERE" # <--- ！！！请在此处粘贴你的订阅链接
-    interval: 3600
-    path: ./proxies.yaml
-    health-check:
-      enable: true
-      url: http://www.gstatic.com/generate_204
-      interval: 600
+# 策略组
+proxy-groups:
+  # 主选择器
+  - {name: 🚀 节点选择, type: select, proxies: [♻️ 全球智能, 🇯🇵 日本智能, 🇸🇬 新加坡智能, 🇺🇸 美国智能, 🇰🇷 韩国智能, 🇹🇼 台湾智能, 🇭🇰 香港智能, 🇬🇧 英国智能, 🇩🇪 德国智能, 🇨🇭 瑞士智能, 🇦🇺 澳洲智能, 🇦🇪 阿联酋智能, 🇮🇳 印度智能, 🎯 全球直连, 🚫 拒绝]}
 
-# (Rule Provider) Rule sets for smart routing
+  # AI 服务 (优选日本、新加坡、美国)
+  - {name: 🤖 AI服务, type: select, proxies: [🇯🇵 日本智能, 🇸🇬 新加坡智能, 🇺🇸 美国智能, 🚀 节点选择]}
+
+  # 流媒体 (优选香港、新加坡、美国、英国)
+  - {name: 📹 YouTube, type: select, proxies: [🇸🇬 新加坡智能, 🇺🇸 美国智能, 🇭🇰 香港智能, 🇬🇧 英国智能, 🚀 节点选择]}
+  - {name: 🎥 Netflix, type: select, proxies: [🇸🇬 新加坡智能, 🇺🇸 美国智能, 🇭🇰 香港智能, 🇬🇧 英国智能, 🇯🇵 日本智能, 🚀 节点选择]}
+  - {name: 🎵 TikTok, type: select, proxies: [🇸🇬 新加坡智能, 🇺🇸 美国智能, 🇯🇵 日本智能, 🇰🇷 韩国智能, 🚀 节点选择]}
+  - {name: 🎶 Spotify, type: select, proxies: [🇺🇸 美国智能, 🇬🇧 英国智能, 🇸🇬 新加坡智能, 🚀 节点选择]}
+
+  # 苹果与微软服务 (直连优先)
+  - {name: 🍎 Apple, type: select, proxies: [🎯 全球直连, 🚀 节点选择]}
+  - {name: Ⓜ️ Microsoft, type: select, proxies: [🎯 全球直连, 🚀 节点选择]}
+
+  # 网页与开发 (优选美国、日本、新加坡)
+  - {name: 🌍 Google, type: select, proxies: [🇺🇸 美国智能, 🇯🇵 日本智能, 🇸🇬 新加坡智能, 🚀 节点选择]}
+  - {name: 📊 GitHub, type: select, proxies: [🇺🇸 美国智能, 🇸🇬 新加坡智能, 🇯🇵 日本智能, 🚀 节点选择]}
+  - {name: 📲 Telegram, type: select, proxies: [🇺🇸 美国智能, 🇸🇬 新加坡智能, 🚀 节点选择]}
+
+  # 下载专用 (使用 0.01x 节点)
+  - {name: 📥 下载专用, type: select, proxies: [🇺🇸 美国下载, 🇯🇵 日本下载, 🚀 节点选择]}
+
+  # 全球智能选择 (仅包含1x倍率节点)
+  - {name: ♻️ 全球智能, type: smart, include-all: true, interval: 300, filter: "(?=.*(日本|新加坡|美国|韩国|台湾|香港|英国|德国|瑞士|澳洲|阿联酋|印度))^((?!(0\\.1倍|0\\.01倍|hy2)).)*$"}
+
+  # 地区智能选择 (仅包含1x倍率节点)
+  - {name: 🇯🇵 日本智能, type: smart, include-all: true, interval: 300, filter: "(?=.*(日本|东京|JP|Japan))^((?!(0\\.1倍|0\\.01倍|hy2)).)*$"}
+  - {name: 🇸🇬 新加坡智能, type: smart, include-all: true, interval: 300, filter: "(?=.*(新加坡|SG|Singapore))^((?!(0\\.1倍|0\\.01倍|hy2)).)*$"}
+  - {name: 🇺🇸 美国智能, type: smart, include-all: true, interval: 300, filter: "(?=.*(美国|US|United States|圣何塞|洛杉矶|阿什本|凤凰城))^((?!(0\\.1倍|0\\.01倍|hy2)).)*$"}
+  - {name: 🇰🇷 韩国智能, type: smart, include-all: true, interval: 300, filter: "(?=.*(韩国|首尔|KR|Korea))^((?!(0\\.1倍|0\\.01倍|hy2)).)*$"}
+  - {name: 🇹🇼 台湾智能, type: smart, include-all: true, interval: 300, filter: "(?=.*(台湾|TW|Taiwan))^((?!(0\\.1倍|0\\.01倍|hy2)).)*$"}
+  - {name: 🇭🇰 香港智能, type: select, include-all: true, filter: "(?=.*(香港|HK|Hong Kong))^((?!(0\\.1倍|0\\.01倍|hy2)).)*$"} # 您的节点列表中无香港，但保留以防万一
+  - {name: 🇬🇧 英国智能, type: smart, include-all: true, interval: 300, filter: "(?=.*(英国|UK|Britain))^((?!(0\\.1倍|0\\.01倍|hy2)).)*$"}
+  - {name: 🇩🇪 德国智能, type: smart, include-all: true, interval: 300, filter: "(?=.*(德国|Germany))^((?!(0\\.1倍|0\\.01倍|hy2)).)*$"}
+  - {name: 🇨🇭 瑞士智能, type: smart, include-all: true, interval: 300, filter: "(?=.*(瑞士|Switzerland|苏黎世))^((?!(0\\.1倍|0\\.01倍|hy2)).)*$"}
+  - {name: 🇦🇺 澳洲智能, type: smart, include-all: true, interval: 300, filter: "(?=.*(澳大利亚|AU|Australia))^((?!(0\\.1倍|0\\.01倍|hy2)).)*$"}
+  - {name: 🇦🇪 阿联酋智能, type: smart, include-all: true, interval: 300, filter: "(?=.*(阿联酋|迪拜|UAE|Dubai))^((?!(0\\.1倍|0\\.01倍|hy2)).)*$"}
+  - {name: 🇮🇳 印度智能, type: smart, include-all: true, interval: 300, filter: "(?=.*(印度|IND|India))^((?!(0\\.1倍|0\\.01倍|hy2)).)*$"}
+
+  # Hysteria2 优选组 (通常性能更好)
+  - {name: 🚀 Hysteria2优选, type: select, proxies: [🇯🇵 日本-Hy2, 🇸🇬 新加坡-Hy2, 🇺🇸 美国-Hy2, 🇰🇷 韩国-Hy2, 🇩🇪 德国-Hy2, 🇨🇭 瑞士-Hy2, 🇦🇺 澳洲-Hy2, 🇬🇧 英国-Hy2, 🇦🇪 阿联酋-Hy2]}
+
+  - {name: 🇯🇵 日本-Hy2, type: url-test, include-all: true, interval: 300, filter: "(?=.*(日本|东京|JP|Japan)).*(hy2)"}
+  - {name: 🇸🇬 新加坡-Hy2, type: url-test, include-all: true, interval: 300, filter: "(?=.*(新加坡|SG|Singapore)).*(hy2)"}
+  - {name: 🇺🇸 美国-Hy2, type: url-test, include-all: true, interval: 300, filter: "(?=.*(美国|US|United States|圣何塞|凤凰城)).*(hy2)"}
+  - {name: 🇰🇷 韩国-Hy2, type: url-test, include-all: true, interval: 300, filter: "(?=.*(韩国|首尔|KR|Korea)).*(hy2)"}
+  - {name: 🇩🇪 德国-Hy2, type: url-test, include-all: true, interval: 300, filter: "(?=.*(德国|Germany)).*(hy2)"}
+  - {name: 🇨🇭 瑞士-Hy2, type: url-test, include-all: true, interval: 300, filter: "(?=.*(瑞士|Switzerland|苏黎世)).*(hy2)"}
+  - {name: 🇦🇺 澳洲-Hy2, type: url-test, include-all: true, interval: 300, filter: "(?=.*(澳大利亚|AU|Australia)).*(hy2)"}
+  - {name: 🇬🇧 英国-Hy2, type: url-test, include-all: true, interval: 300, filter: "(?=.*(英国|UK|Britain)).*(hy2)"}
+  - {name: 🇦🇪 阿联酋-Hy2, type: url-test, include-all: true, interval: 300, filter: "(?=.*(阿联酋|迪拜|UAE|Dubai)).*(hy2)"}
+
+  # 下载专用组 (使用0.01x节点)
+  - {name: 🇺🇸 美国下载, type: select, include-all: true, filter: "(?=.*(美国|US|United States)).*(0\\.01倍)"}
+  - {name: 🇯🇵 日本下载, type: select, include-all: true, filter: "(?=.*(日本|东京|JP|Japan)).*(0\\.01倍)"}
+
+  # 最终策略
+  - {name: 🐟 漏网之鱼, type: select, proxies: [🚀 节点选择, 🎯 全球直连]}
+
+# 规则匹配
+rules:
+  - RULE-SET,private,🎯 全球直连
+  - RULE-SET,apple,🍎 Apple
+  - RULE-SET,microsoft,Ⓜ️ Microsoft
+  - RULE-SET,google,🌍 Google
+  - RULE-SET,openai,🤖 AI服务
+  - RULE-SET,netflix,🎥 Netflix
+  - RULE-SET,youtube,📹 YouTube
+  - RULE-SET,tiktok,🎵 TikTok
+  - RULE-SET,telegram,📲 Telegram
+  - RULE-SET,github,📊 GitHub
+  - RULE-SET,spotify,🎶 Spotify
+  - RULE-SET,gfw,🚀 节点选择
+  - RULE-SET,cn,🎯 全球直连
+  - MATCH,🐟 漏网之鱼
+
+# 规则集
 rule-providers:
-  # Ad blocking rules
-  ads:
+  private:
     type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/AdguardTeam/AdguardSDNSFilter@master/Filters/filter.txt"
-    path: ./rules/ads.txt
     interval: 86400
-
-  # OpenAI rules
+    behavior: domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs"
+  apple:
+    type: http
+    interval: 86400
+    behavior: domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.mrs"
+  microsoft:
+    type: http
+    interval: 86400
+    behavior: domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs"
+  google:
+    type: http
+    interval: 86400
+    behavior: domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs"
   openai:
     type: http
-    behavior: classical
-    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/OpenAI/OpenAI.yaml"
-    path: ./rules/openai.yaml
     interval: 86400
-  
-  # China domain/IP rules for direct connection
-  cn_domain:
-    type: http
     behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/China/China.list"
-    path: ./rules/cn_domain.txt
-    interval: 86400
-
-  cn_ip:
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs"
+  netflix:
     type: http
-    behavior: ipcidr
-    url: "https://cdn.jsdelivr.net/gh/Hackl0us/Geo-IP-CN/cn_ipv4.txt"
-    path: ./rules/cn_ip.txt
     interval: 86400
-
-# (Proxy Group) Node grouping and strategy
-proxy-groups:
-  # --- Main Selection Group ---
-  - name: "🚀 主策略"
-    type: select
-    proxies:
-      - "🤖 自动选择"
-      - "🔮 故障转移"
-      - "DIRECT"
-      - "REJECT"
-      - "🇺🇸 美国节点"
-      - "🇯🇵 日本节点"
-      - "🇸🇬 新加坡节点"
-      - "🇰🇷 韩国节点"
-      - "🇨🇳 台湾节点"
-      - "⏬ 低倍率下载"
-
-  # --- Automatic Strategy Groups ---
-  - name: "🤖 自动选择"
-    type: url-test
-    url: http://www.gstatic.com/generate_204
-    interval: 300
-    use:
-      - main-subscription
-
-  - name: "🔮 故障转移"
-    type: fallback
-    url: http://www.gstatic.com/generate_204
-    interval: 300
-    use:
-      - main-subscription
-
-  # --- Special Purpose Groups ---
-  - name: "🌍 国外媒体"
-    type: select
-    proxies:
-      - "🤖 自动选择"
-      - "🇺🇸 美国节点"
-      - "🇯🇵 日本节点"
-      - "🇸🇬 新加坡节点"
-      - "🇨🇳 台湾节点"
-
-  - name: "🧠 人工智能"
-    type: select
-    proxies:
-      - "🇺🇸 美国节点"
-      - "🇯🇵 日本节点"
-      - "🇸🇬 新加坡节点"
-      - "🤖 自动选择"
-
-  - name: "⏬ 低倍率下载"
-    type: url-test
-    url: http://www.gstatic.com/generate_204
-    interval: 600
-    filter: "(?i)0.1倍|0.01倍" # Regex filter for low-rate nodes
-    use:
-      - main-subscription
-
-  # --- Regional Node Groups ---
-  - name: "🇺🇸 美国节点"
-    type: url-test
-    url: http://www.gstatic.com/generate_204
-    interval: 300
-    filter: "(?i)美国|US" # Regex filter for US nodes
-    use:
-      - main-subscription
-
-  - name: "🇯🇵 日本节点"
-    type: url-test
-    url: http://www.gstatic.com/generate_204
-    interval: 300
-    filter: "(?i)日本|东京|JP" # Regex filter for Japan nodes
-    use:
-      - main-subscription
-
-  - name: "🇸🇬 新加坡节点"
-    type: url-test
-    url: http://www.gstatic.com/generate_204
-    interval: 300
-    filter: "(?i)新加坡|SG" # Regex filter for Singapore nodes
-    use:
-      - main-subscription
-
-  - name: "🇰🇷 韩国节点"
-    type: url-test
-    url: http://www.gstatic.com/generate_204
-    interval: 300
-    filter: "(?i)韩国|KR" # Regex filter for Korea nodes
-    use:
-      - main-subscription
-
-  - name: "🇨🇳 台湾节点"
-    type: url-test
-    url: http://www.gstatic.com/generate_204
-    interval: 300
-    filter: "(?i)台湾|TW" # Regex filter for Taiwan nodes
-    use:
-      - main-subscription
-  
-  # --- Protocol Groups (Optional, can be added to 主策略) ---
-  - name: "VLESS 节点"
-    type: url-test
-    url: http://www.gstatic.com/generate_204
-    interval: 300
-    filter: "(?i)vless"
-    use:
-      - main-subscription
-  
-  - name: "Hysteria2 节点"
-    type: url-test
-    url: http://www.gstatic.com/generate_204
-    interval: 300
-    filter: "(?i)hy2|hysteria2"
-    use:
-      - main-subscription
-
-# (Rules) Routing rules
-rules:
-  # --- Custom Rules ---
-  - RULE-SET,ads,REJECT
-  - RULE-SET,openai,🧠 人工智能
-
-  # --- Application Rules ---
-  - DOMAIN-SUFFIX,d.nat.ee,DIRECT
-  - DOMAIN-KEYWORD,music.163,DIRECT
-  - DOMAIN-SUFFIX,msftconnecttest.com,DIRECT
-  - DOMAIN-SUFFIX,msn.cn,DIRECT
-  - DOMAIN-KEYWORD,bilibili,DIRECT
-  - DOMAIN-KEYWORD,telegram,🚀 主策略
-  - DOMAIN-KEYWORD,google,🚀 主策略
-  - DOMAIN-KEYWORD,youtube,🌍 国外媒体
-  - DOMAIN-KEYWORD,netflix,🌍 国外媒体
-  - DOMAIN-KEYWORD,disney,🌍 国外媒体
-  - DOMAIN-KEYWORD,spotify,🌍 国外媒体
-  - DOMAIN-KEYWORD,github,🚀 主策略
-  
-  # --- Direct/Proxy Rules ---
-  - RULE-SET,cn_domain,DIRECT
-  - RULE-SET,cn_ip,DIRECT
-  - GEOIP,CN,DIRECT
-  
-  # --- Final Fallback ---
-  - MATCH,🚀 主策略
+    behavior: domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs"
+  youtube:
+    type: http
+    interval: 86400
+    behavior: domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs"
+  tiktok:
+    type: http
+    interval: 86400
+    behavior: domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs"
+  telegram:
+    type: http
+    interval: 86400
+    behavior: domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs"
+  github:
+    type: http
+    interval: 86400
+    behavior: domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs"
+  spotify:
+    type: http
+    interval: 86400
+    behavior: domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/spotify.mrs"
+  gfw:
+    type: http
+    interval: 86400
+    behavior: domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/gfw.mrs"
+  cn:
+    type: http
+    interval: 86400
+    behavior: domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs"
